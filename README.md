@@ -19,7 +19,7 @@ and applied within 5 minutes.
 
 ## Service Data
 
-The service stores its runtime data in /var/lib/pingfinder/msgd/.
+The service stores its runtime data in `/var/lib/pingfinder/msgd/`.
 
 The directory contains files used to store the current schedule,
 task execution statuses, client statuses, and IPC service data.
