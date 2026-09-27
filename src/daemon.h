@@ -80,7 +80,7 @@ class Daemon : public QObject {
         // Отправитель сообщений, который в блоке инициализации
         // получает доступные транспорты (sms, xmpp)
         MsgSender m_sender;
-        void initSendTransports();
+        bool initSendTransports();
 
         // При необходимости запускает формирование расписания на текущий день
         void runScheduleAction(const QDate&, const QTime&);
@@ -103,6 +103,9 @@ class Daemon : public QObject {
         // Загрузка списка клиентов программу. В данном случае из файла
         bool loadClientsFromFile(const QString& fileName);
         void reloadClientsFromFile();
+
+        // Проверка владельца и прав доступа к файлу с данными клиентов
+        bool isSecureConfigFile(const QString& fileName);
 
         // Очистка файла со статусами клиентов от записей тех клиентов, которых
         // больше нет в базе клиентов (были удалены вручную)

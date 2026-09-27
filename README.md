@@ -14,7 +14,7 @@ To add or remove a user:
 1. Edit `clients.json` and add or remove the corresponding user entry.
 2. Save the file.
 3. Restart the `pingfinder-msgd` service for the changes to take effect.
-Alternatively, changes to `config.json` will be detected automatically
+Alternatively, changes to `clients.json` will be detected automatically
 and applied within 5 minutes.
 
 ## Service Data
@@ -44,6 +44,10 @@ Configuration files are stored in `/etc/pingfinder/msgd/`:
 
 - `clients.json`   — PingFinder clients
 - `transport.json` — message transport configuration
+
+Configuration files may contain private information and must be owned
+by the user running the pingfinder-msgd service. They must be readable
+and writable only by the file owner (0600 permissions).
 
 Example configuration file examples are available in [`examples/config/`](examples/config/).
 

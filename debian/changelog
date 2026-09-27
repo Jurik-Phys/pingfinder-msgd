@@ -2,5 +2,6 @@ pingfinder-msgd (0.0.3-1) unstable; urgency=medium
 
   * Initial working version (MVP)
   * Fix duplicate client nicknames in the example file
+  * Add Debian package build system
 
- -- Yury Ovsyannikov <jurik.phys@gmail.com>  Sun, 27 Sep 2026 15:32:40 +0300
+ -- Yury Ovsyannikov <jurik.phys@gmail.com>  Sun, 27 Sep 2026 22:44:23 +0300

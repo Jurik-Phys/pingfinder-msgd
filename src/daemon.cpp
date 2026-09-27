@@ -11,6 +11,7 @@
 #include <QCoreApplication>
 #include <QRandomGenerator>
 #include "daemon.h"
+#include <unistd.h>
 
 Daemon::Daemon(QObject *parent) : QObject(parent){
 
@@ -19,15 +20,18 @@ Daemon::Daemon(QObject *parent) : QObject(parent){
 
     // Загрузка списка клиентов
     if (!loadClientsFromFile(m_clientsFile)){
-        qDebug() << "[EE] Error loading client list";
+        qDebug() << "[EE] Error loading client list. Exitting";
         exit(1);
     }
 
+    // Инициализация доступных транспортов для отправки сообщений
+    if (!initSendTransports()){
+        qDebug() << "[EE] Error loading transports settings. Exitting";
+        exit(1);
+    };
+
     // Загрузка актуального по дате списка заданий
     loadActualTaskListIfExists(QDate::currentDate());
-
-    // Инициализация доступных транспортов отправки сообщений
-    initSendTransports();
 
     // Запуск IPC Server'а для взаимодействия с демоном
     m_ipcServer = new IpcServer();
@@ -237,7 +241,14 @@ bool Daemon::loadClientsFromFile(const QString& fileName){
 
     if (!clientsFile.open(QIODevice::ReadOnly)){
         qDebug() << "[EE] Error opening" << fileName;
+        qDebug() << "[EE] Create the file using the documentation example";
         return false;
+    }
+    else {
+        // Проверка владельца и прав доступа к файлу с данными клиентов
+        if (!isSecureConfigFile(fileName)){
+            return false;
+        }
     }
 
     QJsonParseError error;
@@ -1133,10 +1144,14 @@ void Daemon::executeTask(const ScheduleTask& task){
     m_sender.send(phoneMsg);
 }
 
-void Daemon::initSendTransports(){
+bool Daemon::initSendTransports(){
 
-    MsgTransport* xmpp = new TransportXmpp(this);
-    MsgTransport* sms  = new TransportZteMF825(this);
+    if (!isSecureConfigFile(m_transportFile)){
+        return false;
+    }
+
+    MsgTransport* xmpp = new TransportXmpp(this, m_transportFile);
+    MsgTransport* sms  = new TransportZteMF825(this, m_transportFile);
 
     // QObject::connect(xmpp, &MsgTransport::msgSent,  this, &Daemon::taskDone);
     // QObject::connect(xmpp, &MsgTransport::msgFail, this, &Daemon::taskSendFail);
@@ -1155,6 +1170,8 @@ void Daemon::initSendTransports(){
     // и добавить в объект класса MsgSender, в данном случае m_sender
     m_sender.addTransport(xmpp);
     m_sender.addTransport(sms);
+
+    return true;
 }
 
 MsgDestination Daemon::buildXmppAdminDestination(){
@@ -1800,7 +1817,7 @@ void Daemon::onMessagePushRequested(const MessagePushRequest& inMsgPushRequest){
         for (int i = 0; i < existsNewClientsIds.size(); ++i){
             int existsNewClientsId = existsNewClientsIds[i];
             clientNicknames.insert(existsNewClientsId,
-                                             getClientNick(existsNewClientsId)); 
+                                             getClientNick(existsNewClientsId));
             pushRequestedTasks.push_back(getTaskByClientId(existsNewClientsId));
         }
     }
@@ -2413,6 +2430,44 @@ bool Daemon::pushNewClientsToSchedule(const QSet<int>& newClientsId){
     inserted = true;
 
     return inserted;
+}
+
+bool Daemon::isSecureConfigFile(const QString& fileName){
+
+    QFileInfo fileInfo(fileName);
+
+    // 1. Файл существует и является обычным файлом
+    if (!fileInfo.isFile()){
+        qDebug() << "[II] Not a regular file:" << fileName;
+        return false;
+    }
+
+    // 2. Владелец файла и текущий пользователь процесса совпадают
+    if (fileInfo.ownerId() != static_cast<uint>(geteuid())) {
+        qDebug() << "[EE] File is not owned by the current user:" << fileName;
+        return false;
+    }
+
+    // 3. Права не позволяют группе чтение, запись и исполнение файла
+    const QFileDevice::Permissions groupPermissions = QFileDevice::ReadGroup |
+                                                      QFileDevice::WriteGroup |
+                                                      QFileDevice::ExeGroup;
+    if ((fileInfo.permissions() & groupPermissions) != 0){
+        qDebug() << "[EE] Group has access permissions:" << fileName;
+        return false;
+    }
+
+    // 4. Права не позволяют чтение, запись и исполнение файла остальным
+    const QFileDevice::Permissions otherPermissions = QFileDevice::ReadOther |
+                                                      QFileDevice::WriteOther |
+                                                      QFileDevice::ExeOther;
+    if ((fileInfo.permissions() & otherPermissions) != 0){
+        qDebug() << "[EE] Other users has access permissions:" << fileName;
+        return false;
+    }
+
+    // Все ограничения пройдены успешно
+    return true;
 }
 
 // End daemon.cpp

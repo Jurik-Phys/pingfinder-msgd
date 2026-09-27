@@ -33,6 +33,12 @@ IpcServer::IpcServer(QObject* parent) : QObject(parent){
         exit(1);
     }
 
+    // Установка прав на чтение/запись только для владельца и участника группы
+    QFile::setPermissions(m_sockeFullPath, QFileDevice::ReadOwner |
+                                           QFileDevice::WriteOwner|
+                                           QFileDevice::ReadGroup |
+                                           QFileDevice::WriteGroup);
+
     QObject::connect(m_server, &QLocalServer::newConnection,
                                               this,&IpcServer::onNewConnection);
 }
