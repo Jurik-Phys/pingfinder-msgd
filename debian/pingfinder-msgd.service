@@ -1,0 +1,15 @@
+[Unit]
+Description=PingFinder Message Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=pingfinder
+Group=pingfinder
+ExecStart=/usr/bin/pingfinder-msgd
+Restart=on-failure
+RestartSec=1800
+
+[Install]
+WantedBy=multi-user.target
+
