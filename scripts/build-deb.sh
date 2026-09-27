@@ -2,7 +2,7 @@
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
-"${REPO_ROOT}/scripts/generate-changelog.sh"
+"${REPO_ROOT}/scripts/make-deb-changelog.sh"
 
 cd "$REPO_ROOT"
 

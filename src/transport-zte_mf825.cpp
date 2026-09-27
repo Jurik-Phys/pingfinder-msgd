@@ -436,7 +436,7 @@ QString TransportZteMF825::preparePhoneNumber(const QString& rawPhoneNumber){
     // Процентное или URL-кодирование номера телефона:
     // Знак "+" в form-urlencoded означает пробел, что ломает отправку сообщения
     // > Закомментировать строку ниже для имитации ошибки отправки sms модемом <
-    // phoneNumber = phoneNumber.replace("+", "%2B");
+    phoneNumber = phoneNumber.replace("+", "%2B");
 
     return phoneNumber;
 }
