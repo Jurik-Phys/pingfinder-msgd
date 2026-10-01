@@ -1,11 +1,6 @@
-pingfinder-msgd (0.0.5-1) unstable; urgency=medium
+pingfinder-msgd (0.0.6-1) unstable; urgency=medium
 
-  * Initial commit for pingfinder-msgd
-  * Initial working version (MVP)
-  * Fix duplicate client nicknames in the example file
-  * Add Debian package build system
-  * Add configuration and IPC security checks
-  * Enable phone number URL encoding for real SMS sending
-  * Add GitHub Actions build and release workflows
+  * Fix GitHub Actions (main branch no longer needed)
+  * Skip merge commits in Debian changelog
 
- -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 01 Oct 2026 14:00:30 +0300
+ -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 01 Oct 2026 14:51:28 +0300
