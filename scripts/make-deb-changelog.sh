@@ -51,9 +51,9 @@ PREVIOUS_TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | 
 
 # Получение коммитов
 if [[ -n "$PREVIOUS_TAG" ]]; then
-    COMMITS=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:'%s' --reverse)
+    COMMITS=$(git log "${PREVIOUS_TAG}..HEAD" --no-merges --pretty=format:'%s' --reverse)
 else
-    COMMITS=$(git log HEAD --pretty=format:'%s' --reverse)
+    COMMITS=$(git log HEAD --no-merges --pretty=format:'%s' --reverse)
 fi
 
 if [[ -z "$COMMITS" ]]; then
