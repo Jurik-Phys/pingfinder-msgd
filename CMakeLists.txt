@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(pingfinder-msgd VERSION 0.0.5)
+project(pingfinder-msgd VERSION 0.0.6)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
