@@ -1,0 +1,18 @@
+Source: pingfinder-msgd
+Section: misc
+Priority: optional
+Maintainer: Yury Ovsyannikov <jurik.phys@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake,
+               qt6-base-dev
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+
+Package: pingfinder-msgd
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends}
+         adduser
+Description: PingFinder message daemon
+ Background service for scheduling and sending SMS messages
+ to PingFinder clients.

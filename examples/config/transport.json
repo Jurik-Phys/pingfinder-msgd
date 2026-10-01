@@ -1,0 +1,20 @@
+{
+    "about": {
+        "description" : "Параметры траспортов отправляемых сообщений"
+    },
+    "transports" : [
+        {
+            "type"          : "xmpp",
+            "info"          : "Used to send administration messages to jabber",
+            "sender_login"  : "xmpp.message.sender",
+            "sender_server" : "jabber.ru",
+            "sender_passwd" : "<SECRET>",
+            "admin_logroom" : "logroom@conference.jabber.ru"
+        },
+        {
+            "type"       : "zte_mf825",
+            "info"       : "Modem WebUI https://4pda.to/forum/dl/post/4311006/beeline-web.jpg | Modem discussion https://4pda.to/forum/index.php?showtopic=555876",
+            "device_ip"  : "192.168.99.1"
+        }
+    ]
+}

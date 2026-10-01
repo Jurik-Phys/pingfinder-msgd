@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:13
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+            debhelper \
+            cmake \
+            qt6-base-dev \
+            git
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Trust checked-out repository
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Fetch development branches
+        run: |
+          git fetch origin main
+          git fetch origin develop
+          git branch main origin/main
+          git branch develop origin/develop
+
+      - name: Build package
+        run: ./scripts/build-deb.sh
+
+      - name: Show Debian changelog
+        run: cat debian/changelog
+
+      - name: Get package name
+        id: package
+        run: |
+          echo "name=$(dpkg-parsechangelog -S Source)" >> "$GITHUB_OUTPUT"
+
+      - name: List Debian packages
+        run: |
+          echo "Package name: ${{ steps.package.outputs.name }}"
+          ls -la ../*.deb
+
+      - name: Remove debug symbols package
+        run: |
+          rm -f ../${{ steps.package.outputs.name }}-dbgsym_*.deb
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ../${{ steps.package.outputs.name }}_*.deb

@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+
+USER_NAME="pingfinder"
+
+CONFIG_DIR="/etc/pingfinder/msgd"
+RUNTIME_DIR="/var/lib/pingfinder/msgd"
+
+STATE_DIR="/var/lib/pingfinder"
+USER_CREATED_MARKER="${STATE_DIR}/.msgd-user-created"
+
+case "$1" in
+    configure)
+        if ! getent passwd "$USER_NAME" >/dev/null 2>&1; then
+            adduser \
+                --system \
+                --group \
+                --no-create-home \
+                --disabled-login \
+                "$USER_NAME"
+
+            mkdir -p "$STATE_DIR"
+            touch "$USER_CREATED_MARKER"
+            chmod 600 "$USER_CREATED_MARKER"
+        fi
+
+        install -d \
+            -o "$USER_NAME" \
+            -g "$USER_NAME" \
+            -m 700 \
+            "$CONFIG_DIR"
+
+        install -d \
+            -o "$USER_NAME" \
+            -g "$USER_NAME" \
+            -m 700 \
+            "$RUNTIME_DIR"
+        ;;
+esac
+
+exit 0

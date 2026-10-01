@@ -1,0 +1,36 @@
+#!/bin/sh
+set -e
+
+USER_NAME="pingfinder"
+CONFIG_DIR="/etc/pingfinder/msgd"
+RUNTIME_DIR="/var/lib/pingfinder/msgd"
+STATE_DIR="/var/lib/pingfinder"
+USER_CREATED_MARKER="${STATE_DIR}/.msgd-user-created"
+
+case "$1" in
+    remove)
+        # Runtime data is not preserved.
+        rm -rf "$RUNTIME_DIR"
+        ;;
+    purge)
+        # Configuration is removed only on purge.
+        rm -rf "$CONFIG_DIR"
+
+        # Remove the user only if this package created it.
+        if [ -f "$USER_CREATED_MARKER" ]; then
+            if getent passwd "$USER_NAME" >/dev/null 2>&1; then
+                deluser --system "$USER_NAME"
+            fi
+
+            if getent group "$USER_NAME" >/dev/null 2>&1; then
+                delgroup --system "$USER_NAME"
+            fi
+        fi
+
+        rm -f "$USER_CREATED_MARKER"
+
+        # Remove the state directory if it is now empty.
+        rmdir "$STATE_DIR" 2>/dev/null || true
+        ;;
+esac
+exit 0
