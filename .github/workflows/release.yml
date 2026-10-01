@@ -33,13 +33,6 @@ jobs:
       - name: Trust checked-out repository
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Fetch development branches
-        run: |
-          git fetch origin main
-          git fetch origin develop
-          git branch main origin/main
-          git branch develop origin/develop
-
       - name: Build package
         run: ./scripts/build-deb.sh
 
