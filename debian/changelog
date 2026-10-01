@@ -1,5 +1,6 @@
 pingfinder-msgd (0.0.6-1) unstable; urgency=medium
 
   * Fix GitHub Actions (main branch no longer needed)
+  * Skip merge commits in Debian changelog
 
- -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 01 Oct 2026 14:48:47 +0300
+ -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 01 Oct 2026 14:51:28 +0300
