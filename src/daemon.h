@@ -57,6 +57,8 @@ class Daemon : public QObject {
         const int              m_maxFailedAttempts = 5;
         QTimer                 m_timer;
         QVector<Client>        m_clients;
+        QMap<int, QString>     m_clientStatusesCache;
+        QDateTime              m_clientStatusFileLastModified;
         QMap<QString, QString> m_smsTemplate;
         Schedule               m_schedule;
         QVector<ScheduleTask>  m_loadedTasks;
