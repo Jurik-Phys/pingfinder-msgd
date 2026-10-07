@@ -43,6 +43,11 @@ Daemon::Daemon(QObject *parent) : QObject(parent){
     QObject::connect(this, &Daemon::ipcMessagesScheduled,
                                m_ipcServer, &IpcServer::onIpcMessagesScheduled);
 
+    QObject::connect(m_ipcServer, &IpcServer::clientsListRequested,
+                                         this, &Daemon::onClientsListRequested);
+    QObject::connect(this, &Daemon::ipcClientsListCreated,
+                              m_ipcServer, &IpcServer::onIpcClientsListCreated);
+
     // При изменнеии файла со списком клиентов произвести перезагрузку файла
     QObject::connect(&m_clientWatcher, &ClientWatcher::fileChanged,
                                           this, &Daemon::reloadClientsFromFile);
@@ -1815,6 +1820,27 @@ void Daemon::onMessagePushRequested(const MessagePushRequest& inMsgPushRequest){
                              resultReport, clientNicknames, pushRequestedTasks);
 
     qDebug() << "[II] [onMessagePushRequested] All clients OK";
+}
+
+void Daemon::onClientsListRequested(const ClientsListRequest& request){
+
+    qDebug() << "[II] Clients list requested via IPC by" << request.providedBy;
+
+    QString requestId    = request.requestId;
+    QString resultType   = "clients_request_completed";
+    QString resultReport = "Clients list successfully created";
+
+    QVector<int> listOfEnClinetsId;
+    QStringList  listOfEnClientsNick;
+    for (int i = 0; i < m_clients.size(); ++i){
+        if (m_clients[i].enabled){
+            listOfEnClinetsId.push_back(m_clients[i].id);
+            listOfEnClientsNick.push_back(m_clients[i].nickname);
+        }
+    }
+
+    emit ipcClientsListCreated(request.requestId, resultType, resultReport,
+                                        listOfEnClinetsId, listOfEnClientsNick);
 }
 
 bool Daemon::validateIpcPushMessageType(const QString& messageType,
