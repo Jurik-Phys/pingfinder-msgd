@@ -21,6 +21,7 @@ class IpcServer : public QObject{
 
     signals:
         void messagePushRequested(const MessagePushRequest& messagePushRequest);
+        void clientsListRequested(const ClientsListRequest& clientsRequested);
 
     public slots:
         void onIpcPushRequestValidationFailed(const QString& requestId,
@@ -34,6 +35,11 @@ class IpcServer : public QObject{
                                     const QMap<int, QString>& clientNicknames,
                                     const QVector<ScheduleTask>& tasks);
 
+        void onIpcClientsListCreated(const QString& requestId,
+                                     const QString& resultType,
+                                     const QString& resultReport,
+                                     const QVector<int>& listOfEnClinetsId,
+                                     const QStringList& listOfEnClientsNick);
     private slots:
         void onNewConnection();
         void onReadyRead();
@@ -47,6 +53,8 @@ class IpcServer : public QObject{
         void handleCommand(QJsonObject ipcObj);
         void handleMessagePush(const QString& requestId,
                                                      QJsonObject ipcPayloadObj);
+        void handleClientsListRequested(const QString& requestId,
+                                                     QJsonObject ipcPayloadObj);
 
         QJsonDocument pushValidationFailToJson(const QString& failureType,
                                                const QString& failureReport,
@@ -56,6 +64,12 @@ class IpcServer : public QObject{
                                       const QString& resultReport,
                                       const QMap<int, QString>& clientNicknames,
                                       const QVector<ScheduleTask>& tasks);
+
+        QJsonDocument pushClientsListToJson(const QString& resultType,
+                                        const QString& resultReport,
+                                        const QVector<int>& listOfEnClinetsId,
+                                        const QStringList& listOfEnClientsNick);
+
 };
 
 #endif

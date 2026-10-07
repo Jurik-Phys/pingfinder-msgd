@@ -39,6 +39,13 @@ class Daemon : public QObject {
                                   const QMap<int, QString>& clientNicknames,
                                   const QVector<ScheduleTask> scheduledTasks);
 
+        // Сигнал при отправке через ipc списка включенных клиентов и их id
+        void ipcClientsListCreated(const QString& requestId,
+                                   const QString& resultType,
+                                   const QString& resultReport,
+                                   const QVector<int>& listOfEnClinetsId,
+                                   const QStringList& listOfEnClientsNick);
+
         // Сигнал при повторной загрузке списка клиентов из файла 'clients.json'
         void clientsReloadedFromFile();
 
@@ -47,6 +54,7 @@ class Daemon : public QObject {
         void taskDone(const QString& taskUuid);
         void taskSendFail(const QString& taskUuid);
         void onMessagePushRequested(const MessagePushRequest& request);
+        void onClientsListRequested(const ClientsListRequest& request);
 
     private:
         const int              m_scheduleStartHH   = 10;
@@ -57,6 +65,8 @@ class Daemon : public QObject {
         const int              m_maxFailedAttempts = 5;
         QTimer                 m_timer;
         QVector<Client>        m_clients;
+        QMap<int, QString>     m_clientStatusesCache;
+        QDateTime              m_clientStatusFileLastModified;
         QMap<QString, QString> m_smsTemplate;
         Schedule               m_schedule;
         QVector<ScheduleTask>  m_loadedTasks;

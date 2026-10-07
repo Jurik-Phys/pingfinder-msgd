@@ -140,9 +140,14 @@ void IpcServer::onReadyRead(){
 }
 
 void IpcServer::handleCommand(QJsonObject obj){
-
     if (obj["action"] == "message_push"){
         handleMessagePush(obj["request_id"].toString(),
+                                                     obj["payload"].toObject());
+    }
+
+    if (obj["action"] == "clients_request"){
+        QJsonObject payload = obj["payload"].toObject();
+        handleClientsListRequested(obj["request_id"].toString(),
                                                      obj["payload"].toObject());
     }
 }
@@ -171,6 +176,15 @@ void IpcServer::handleMessagePush(const QString& requestId,
     messagePushRequest.providedBy  = providedBy;
 
     emit messagePushRequested(messagePushRequest);
+}
+
+void IpcServer::handleClientsListRequested(const QString& requestId,
+                                                        QJsonObject payloadObj){
+    ClientsListRequest clientsListRequest;
+    clientsListRequest.providedBy = payloadObj["provided_by"].toString();
+    clientsListRequest.requestId  = requestId;
+
+    emit clientsListRequested(clientsListRequest);
 }
 
 void IpcServer::onIpcPushRequestValidationFailed(const QString& requestId,
@@ -249,6 +263,19 @@ void IpcServer::onIpcMessagesScheduled(const QString& requestId,
     writeToSocket(requestId, pushMessagesScheduledDoc);
 }
 
+void IpcServer::onIpcClientsListCreated(const QString& requestId,
+                                        const QString& resultType,
+                                        const QString& resultReport,
+                                        const QVector<int>& listOfEnClinetsId,
+                                        const QStringList& listOfEnClientsNick){
+
+    QJsonDocument clientsListDoc = pushClientsListToJson(resultType,
+                                                         resultReport,
+                                                         listOfEnClinetsId,
+                                                         listOfEnClientsNick);
+    writeToSocket(requestId, clientsListDoc );
+}
+
 QJsonDocument IpcServer::pushMessagesScheduledToJson(const QString& resultType,
                                       const QString& resultReport,
                                       const QMap<int, QString>& clientNicknames,
@@ -278,4 +305,33 @@ QJsonDocument IpcServer::pushMessagesScheduledToJson(const QString& resultType,
     return QJsonDocument(obj);
 }
 
+QJsonDocument IpcServer::pushClientsListToJson(const QString& resultType,
+                                        const QString& resultReport,
+                                        const QVector<int>& listOfEnClinetsId,
+                                        const QStringList& listOfEnClientsNick){
+    QJsonObject obj;
+    obj["action"] = "clients_list_created";
+
+    QJsonObject payloadObj;
+    payloadObj["result_type"]   = resultType;
+    payloadObj["result_report"] = resultReport;
+
+    QJsonArray clientsArray;
+
+    int sizeId = listOfEnClinetsId.size();
+    int sizeNick = listOfEnClientsNick.size();
+
+    if (sizeId == sizeNick){
+        for (int i = 0; i < sizeId; ++i){
+            QJsonObject clientObj;
+            clientObj["id"] = listOfEnClinetsId[i];
+            clientObj["nickname"] = listOfEnClientsNick[i];
+            clientsArray.push_back(clientObj);
+        }
+        payloadObj["clients"] = clientsArray;
+        obj["payload"] = payloadObj;
+    }
+
+    return QJsonDocument(obj);
+}
 // End ipcserver.cpp

@@ -43,6 +43,11 @@ Daemon::Daemon(QObject *parent) : QObject(parent){
     QObject::connect(this, &Daemon::ipcMessagesScheduled,
                                m_ipcServer, &IpcServer::onIpcMessagesScheduled);
 
+    QObject::connect(m_ipcServer, &IpcServer::clientsListRequested,
+                                         this, &Daemon::onClientsListRequested);
+    QObject::connect(this, &Daemon::ipcClientsListCreated,
+                              m_ipcServer, &IpcServer::onIpcClientsListCreated);
+
     // При изменнеии файла со списком клиентов произвести перезагрузку файла
     QObject::connect(&m_clientWatcher, &ClientWatcher::fileChanged,
                                           this, &Daemon::reloadClientsFromFile);
@@ -98,20 +103,13 @@ void Daemon::smsTemplateInit(){
 }
 
 void Daemon::runScheduleAction(const QDate& date, const QTime& time){
-
     // I. Проверка на наличие расписания на сегодняшний день,
     //    если оно есть в переменной m_schedule, то необходимо проверить
     //    актуальность списка клиентов в нём
     if (m_schedule.date == date){
         QSet<int> actualClientsId, scheduleClientsId;
-
-        // Генерация актуального списка клиентов
-        for (int i = 0; i < m_clients.size(); ++i){
-            if (m_clients[i].reminderDay == date.day()
-                                               && m_clients[i].enabled == true){
-                actualClientsId.insert(m_clients[i].id);
-            }
-        }
+        QVector<int> actualId = getActiveClientId(QVector<int> {date.day()});
+        actualClientsId = QSet<int>(actualId.begin(), actualId.end());
 
         // Генерация списка клиентов, присутствующих в расписании
         // Внимание. В данный список попадают только то, что было сгенерировано
@@ -309,8 +307,9 @@ QVector<int> Daemon::getActiveClientId(const QVector<int> activeDays){
             if (m_clients[i].reminderDay == activeDays[j] &&
                                                           m_clients[i].enabled){
                 // Клиентам, пользующимся сервисом на безвозмездной основе,
-                // требуется отправлять сообщения, только если их статус
-                // не regular (т.е., ещё не было отправки приветственного смс)
+                // которым уже было отправлено приветственное сообщение
+                // не требуется отправлять сообщения, в противном случае,
+                // например, для клиентов со статусом "new" требуется отправка
                 int clientPayAmount = getClientPayAmount(m_clients[i].id);
                 if (clientPayAmount == 0){
                     // Статус безвозмездного клиента
@@ -322,8 +321,6 @@ QVector<int> Daemon::getActiveClientId(const QVector<int> activeDays){
                 else {
                     activeClientId.push_back(m_clients[i].id);
                 }
-                qDebug() << "[II] [daemon.cpp] Client id:" << m_clients[i].id
-                                      << "|" << "Pay amount" << clientPayAmount;
             }
         }
     }
@@ -345,8 +342,17 @@ QMap<int, QString> Daemon::getClientStatusMap(QVector<int> activeClientId){
         exit(1);
     }
 
+    // Если файл со статусами изменился, то обновляем внутренний кеш
+    QFileInfo fileInfo(m_clientStatusFile);
+    QDateTime realCientStatusFileLastModified = fileInfo.lastModified();
+    if (m_clientStatusFileLastModified != realCientStatusFileLastModified){
+        m_clientStatusesCache.clear();
+        m_clientStatusesCache = loadClientStatusFromJsonFile();
+        m_clientStatusFileLastModified = realCientStatusFileLastModified;
+    }
+
     // Загрузка всех статусов из файла
-    QMap<int, QString> allClientStatus = loadClientStatusFromJsonFile();
+    QMap<int, QString> allClientStatus = m_clientStatusesCache;
 
     bool isNeedToUpdateClientStatusJsonFile = false;
     // Очистка списка статусов от клиентов, отсутствующих в списке клиентов
@@ -1295,34 +1301,22 @@ QString Daemon::getExternalMessage(const ScheduleTask& task){
 }
 
 QString Daemon::getClientStatus(const int& clientId){
-    //
+
     QString res = "unknown";
+    QFileInfo fileInfo(m_clientStatusFile);
 
-    QFile clientStatus(m_clientStatusFile);
-
-    if (!clientStatus.open(QIODevice::ReadOnly)){
-        qDebug() << "[II] Unable to open file for reading:"<<m_clientStatusFile;
-        return res;
+    // Внутренне значение даты и времени модификации файла со статусами
+    // клиентов не совпадает cо значением даты и времени модификации файла
+    QDateTime realCientStatusFileLastModified = fileInfo.lastModified();
+    if (m_clientStatusFileLastModified != realCientStatusFileLastModified){
+        qDebug() << "[II] Reload client statuses from" << m_clientStatusFile;
+        m_clientStatusesCache.clear();
+        m_clientStatusesCache = loadClientStatusFromJsonFile();
+        m_clientStatusFileLastModified = realCientStatusFileLastModified;
     }
 
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(clientStatus.readAll(), &error);
-    clientStatus.close();
-
-    if (error.error != QJsonParseError::NoError){
-        qDebug() << "[EE] JSON parse error:" << error.errorString();
-        return res;
-    }
-
-    QJsonObject root = doc.object();
-    QJsonArray statuses = root["statuses"].toArray();
-
-    for (int i = 0; i < statuses.size(); ++i){
-        QJsonObject clientStatusInfo = statuses[i].toObject();
-        if (clientStatusInfo["client_id"].toInt() == clientId){
-            res = clientStatusInfo["status"].toString();
-            break;
-        }
+    if (m_clientStatusesCache.contains(clientId)) {
+        res = m_clientStatusesCache[clientId];
     }
 
     return res;
@@ -1826,6 +1820,27 @@ void Daemon::onMessagePushRequested(const MessagePushRequest& inMsgPushRequest){
                              resultReport, clientNicknames, pushRequestedTasks);
 
     qDebug() << "[II] [onMessagePushRequested] All clients OK";
+}
+
+void Daemon::onClientsListRequested(const ClientsListRequest& request){
+
+    qDebug() << "[II] Clients list requested via IPC by" << request.providedBy;
+
+    QString requestId    = request.requestId;
+    QString resultType   = "clients_request_completed";
+    QString resultReport = "Clients list successfully created";
+
+    QVector<int> listOfEnClinetsId;
+    QStringList  listOfEnClientsNick;
+    for (int i = 0; i < m_clients.size(); ++i){
+        if (m_clients[i].enabled){
+            listOfEnClinetsId.push_back(m_clients[i].id);
+            listOfEnClientsNick.push_back(m_clients[i].nickname);
+        }
+    }
+
+    emit ipcClientsListCreated(request.requestId, resultType, resultReport,
+                                        listOfEnClinetsId, listOfEnClientsNick);
 }
 
 bool Daemon::validateIpcPushMessageType(const QString& messageType,

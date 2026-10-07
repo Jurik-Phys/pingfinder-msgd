@@ -16,5 +16,10 @@ struct MessagePushRequest {
     QString     providedBy;
 };
 
+struct ClientsListRequest {
+    QString     requestId;
+    QString     providedBy;
+};
+
 #endif
 // End ipcrequest.h

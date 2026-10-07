@@ -1,6 +1,6 @@
-pingfinder-msgd (0.0.6-1) unstable; urgency=medium
+pingfinder-msgd (0.0.7-1) unstable; urgency=medium
 
-  * Fix GitHub Actions (main branch no longer needed)
-  * Skip merge commits in Debian changelog
+  * Fix nightly SMS sending to zero-pay regular clients
+  * Add IPC support for client list requests
 
- -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 01 Oct 2026 14:51:28 +0300
+ -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 08 Oct 2026 01:28:59 +0300
