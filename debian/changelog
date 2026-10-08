@@ -1,6 +1,5 @@
-pingfinder-msgd (0.0.7-1) unstable; urgency=medium
+pingfinder-msgd (0.0.8-1) unstable; urgency=medium
 
-  * Fix nightly SMS sending to zero-pay regular clients
-  * Add IPC support for client list requests
+  * Add release notes to GitHub by GitHub Actions
 
- -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 08 Oct 2026 01:28:59 +0300
+ -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 08 Oct 2026 21:22:31 +0300
