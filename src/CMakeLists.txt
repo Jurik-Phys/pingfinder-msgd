@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(SOURCE_LIB daemon.cpp
+set(SOURCE_LIB appCmd.cpp
+               appInfo.cpp
+               daemon.cpp
                msgsender.cpp
                msgtransport.cpp
                ipcserver.cpp
