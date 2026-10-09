@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(pingfinder-msgd VERSION 0.0.8)
+project(pingfinder-msgd VERSION 0.0.9)
 
 # *** Application version info *** #
 #         ${APP_VERSION}           #
