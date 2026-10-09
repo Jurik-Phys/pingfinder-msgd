@@ -239,7 +239,8 @@ bool Daemon::loadClientsFromFile(const QString& fileName){
 
     if (!clientsFile.open(QIODevice::ReadOnly)){
         qDebug() << "[EE] Error opening" << fileName;
-        qDebug() << "[EE] Create the file using the documentation example";
+        qDebug() << "[EE] Check permissions or create the file using "
+                                                    "the documentation example";
         return false;
     }
     else {
