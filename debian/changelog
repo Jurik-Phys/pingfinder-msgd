@@ -1,5 +1,5 @@
-pingfinder-msgd (0.0.8-1) unstable; urgency=medium
+pingfinder-msgd (0.0.9-1) unstable; urgency=medium
 
-  * Add release notes to GitHub by GitHub Actions
+  * Add CLI options for help and version
 
- -- Yury Ovsyannikov <jurik.phys@gmail.com>  Thu, 08 Oct 2026 21:22:31 +0300
+ -- Yury Ovsyannikov <jurik.phys@gmail.com>  Fri, 09 Oct 2026 13:52:47 +0300
